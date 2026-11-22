@@ -7,7 +7,7 @@ A simple bubble-popping game for little kids, built as a Progressive Web App (PW
 - There's no way to lose.
 - Works offline once it's loaded, and can be installed to a phone or tablet home screen.
 
-**Play it:** https://thomaspmahan.github.io/bubble-pop/
+**Play it:** https://thomaspmahan.github.io/Bubble-pop/
 
 ## Files
 
