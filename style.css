@@ -74,8 +74,11 @@ html, body {
   #card { aspect-ratio: 4 / 5; width: min(92vw, 560px, calc((100vh - 140px) * 0.8)); padding: clamp(34px, 11%, 72px); }
 }
 
+#card.wiggle { animation: wiggle .35s ease; }
 #card.out { animation: flyOut .28s ease-in forwards; }
 #card.in  { animation: flyIn .32s ease-out; }
+#card.back-out { animation: flyOutR .28s ease-in forwards; }
+#card.back-in  { animation: flyInL .32s ease-out; }
 
 #callout {
   position: fixed; left: 0; right: 0; top: calc(env(safe-area-inset-top) + 76px); z-index: 3;
@@ -108,8 +111,40 @@ html, body {
 .hint { font-size: 20px; color: #fff; text-align: center; text-shadow: 0 2px 0 rgba(0,0,0,.12); }
 .hidden { display: none !important; }
 
+#voicePick {
+  font-family: inherit; font-weight: 700; font-size: 17px; color: #01579B;
+  padding: 10px 18px; border: none; border-radius: 999px; cursor: pointer;
+  background: rgba(255,255,255,.75); box-shadow: 0 3px 0 rgba(0,0,0,.12);
+  max-width: 90vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ---------- Finish screen ---------- */
+#finish {
+  position: fixed; inset: 0; z-index: 5;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+  background: linear-gradient(rgba(41,182,246,.96), rgba(2,136,209,.96)); padding: 20px; text-align: center;
+}
+#finish .trophy { font-size: clamp(110px, 30vw, 200px); line-height: 1; animation: bob 1.4s ease-in-out infinite; }
+#finish h2 { font-size: clamp(38px, 9vw, 72px); color: #fff; line-height: 1.1; text-shadow: 0 5px 0 #01579B; }
+.finish-buttons { display: flex; gap: 16px; }
+.finish-buttons button {
+  font-family: inherit; font-weight: 700; font-size: 34px;
+  padding: 14px 40px; border: none; border-radius: 999px; cursor: pointer;
+  background: #FFCA28; color: #5D4037; box-shadow: 0 7px 0 #F57F17;
+}
+#finishHome { padding: 14px 26px !important; background: #fff !important; box-shadow: 0 7px 0 rgba(0,0,0,.2) !important; }
+.confetti {
+  position: fixed; top: -20px; width: 12px; height: 18px; z-index: 6; pointer-events: none;
+  animation: fall linear forwards;
+}
+@keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+@keyframes bob { 50% { transform: translateY(-10px); } }
+
 @keyframes boing { 30% { transform: scale(1.18); } 60% { transform: scale(.95); } }
 @keyframes flyOut { to { transform: translateX(-120vw) rotate(-14deg); } }
 @keyframes flyIn  { from { transform: translateX(110vw) rotate(10deg); } }
+@keyframes flyOutR { to { transform: translateX(120vw) rotate(14deg); } }
+@keyframes flyInL  { from { transform: translateX(-110vw) rotate(-10deg); } }
+@keyframes wiggle { 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
 @keyframes nudge  { 50% { transform: translate(5px, -50%); } }
 @keyframes nudgeL { 50% { transform: translate(-5px, -50%) scaleX(-1); } }

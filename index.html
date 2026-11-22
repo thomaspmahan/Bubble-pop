@@ -17,7 +17,7 @@
 </head>
 <body>
   <div id="hud">
-    <div id="count">⭐ 0</div>
+    <div id="count">⭐ 1</div>
     <div id="buttons">
       <button id="homeBtn" aria-label="Pick word list">🏠</button>
       <button id="soundBtn" aria-label="Toggle sound effects">🔊</button>
@@ -41,7 +41,17 @@
   <div id="start">
     <h1>Sight<br>Words</h1>
     <div id="decks"></div>
-    <p class="hint">Say the word. Tap it to hear it.<br>Tap the edge for a new card.</p>
+    <p class="hint">Say the word. Tap it to hear it.<br>Tap the edges to go forward and back.</p>
+    <button id="voicePick" aria-label="Change the voice">🗣️ <span id="voiceName">Voice</span></button>
+  </div>
+
+  <div id="finish" class="hidden">
+    <div class="trophy">🏆</div>
+    <h2 id="finishText">You did it!</h2>
+    <div class="finish-buttons">
+      <button id="againBtn">▶ Again</button>
+      <button id="finishHome">🏠</button>
+    </div>
   </div>
 
   <script src="game.js"></script>
