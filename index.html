@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Bubble Pop Pals</title>
+  <meta name="description" content="A simple bubble-popping game for little kids. Tap the bubbles!">
+  <meta name="theme-color" content="#4FC3F7">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Bubble Pop">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="hud">
+    <div id="score">⭐ 0</div>
+    <div id="buttons">
+      <button id="voiceBtn" aria-label="Toggle voice">🗣️</button>
+      <button id="soundBtn" aria-label="Toggle sound">🔊</button>
+    </div>
+  </div>
+
+  <div id="callout"></div>
+
+  <div id="start">
+    <h1>Bubble<br>Pop Pals</h1>
+    <button id="playBtn">▶ Play</button>
+    <p class="hint">Tap the bubbles!</p>
+  </div>
+
+  <script src="game.js"></script>
+  <script>
+    // Register the service worker so the game works offline and can be installed.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
