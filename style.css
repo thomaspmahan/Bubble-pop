@@ -1,24 +1,27 @@
+@font-face {
+  /* Andika: a font made for beginning readers (kid-style "a" and "g"). */
+  font-family: "Andika";
+  src: url("andika-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 html, body {
   width: 100%; height: 100%; overflow: hidden;
-  font-family: "Trebuchet MS", "Arial Rounded MT Bold", system-ui, sans-serif;
+  font-family: "Andika", "Trebuchet MS", system-ui, sans-serif; font-weight: 700;
   background: linear-gradient(#4FC3F7, #B3E5FC 60%, #E1F5FE);
-  user-select: none; -webkit-user-select: none; touch-action: none;
+  user-select: none; -webkit-user-select: none; touch-action: manipulation;
 }
 
-canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
-
 #hud {
-  position: fixed; top: 0; left: 0; right: 0;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 2;
   display: flex; justify-content: space-between; align-items: center;
   padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
   pointer-events: none;
 }
-#score {
-  font-size: 34px; font-weight: bold; color: #fff;
-  text-shadow: 0 3px 0 rgba(0,0,0,.18);
-}
+#count { font-size: 34px; color: #fff; text-shadow: 0 3px 0 rgba(0,0,0,.18); }
 #buttons { display: flex; gap: 10px; pointer-events: auto; }
 #buttons button {
   width: 54px; height: 54px; border-radius: 50%; border: none;
@@ -27,32 +30,86 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 }
 #buttons button.off { opacity: .4; }
 
+/* ---------- The flash card ---------- */
+#table {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: calc(env(safe-area-inset-top) + 84px) 16px calc(env(safe-area-inset-bottom) + 24px);
+}
+#card {
+  --edge: #FF7043;
+  position: relative;
+  width: min(92vw, 720px, calc((100vh - 140px) * 1.5));
+  aspect-ratio: 3 / 2;
+  padding: clamp(34px, 9%, 72px);          /* this colored band is the "tap for new card" edge */
+  border-radius: 34px;
+  background: var(--edge);
+  box-shadow: 0 10px 0 rgba(0,0,0,.18), 0 18px 30px rgba(0,0,0,.15);
+  cursor: pointer;
+}
+#card .arrow {
+  position: absolute; top: 50%; color: rgba(255,255,255,.85);
+  font-size: clamp(22px, 4.5vw, 40px); line-height: 1;
+  pointer-events: none; animation: nudge 1.4s ease-in-out infinite;
+}
+#card .arrow.right { right: 3%; transform: translateY(-50%); }
+#card .arrow.left  { left: 3%;  transform: translateY(-50%) scaleX(-1); animation-name: nudgeL; }
+
+#face {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  background: #fff; border-radius: 22px;
+  box-shadow: inset 0 -6px 0 rgba(0,0,0,.06);
+}
+#word {
+  color: #37474F; line-height: 1; white-space: nowrap;
+  padding: .1em .25em; border-radius: 18px;
+  transition: color .2s, background .2s;
+}
+#word.heard { color: var(--edge); animation: boing .5s ease; }
+
+/* Card swap animation */
+/* Phones held upright: a taller card, so the edges are bigger targets. */
+@media (orientation: portrait) {
+  #card { aspect-ratio: 4 / 5; width: min(92vw, 560px, calc((100vh - 140px) * 0.8)); padding: clamp(34px, 11%, 72px); }
+}
+
+#card.out { animation: flyOut .28s ease-in forwards; }
+#card.in  { animation: flyIn .32s ease-out; }
+
 #callout {
-  position: fixed; left: 0; right: 0; top: 38%;
-  text-align: center; font-size: 64px; font-weight: bold; color: #fff;
-  text-shadow: 0 4px 0 rgba(0,0,0,.2);
+  position: fixed; left: 0; right: 0; top: calc(env(safe-area-inset-top) + 76px); z-index: 3;
+  text-align: center; font-size: 52px; color: #fff;
+  text-shadow: 0 4px 0 #0288D1;
   pointer-events: none; opacity: 0; transform: scale(.6);
   transition: opacity .25s, transform .25s;
 }
 #callout.show { opacity: 1; transform: scale(1); }
 
+/* ---------- Start screen ---------- */
 #start {
-  position: fixed; inset: 0; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 28px;
-  background: rgba(79,195,247,.55);
+  position: fixed; inset: 0; z-index: 4;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px;
+  background: linear-gradient(#4FC3F7, #B3E5FC 70%, #E1F5FE);
+  padding: 20px;
 }
 #start h1 {
   font-size: clamp(48px, 13vw, 96px); line-height: 1; text-align: center;
   color: #fff; text-shadow: 0 6px 0 #0288D1;
 }
-#playBtn {
-  font-size: 40px; font-weight: bold; font-family: inherit;
-  padding: 18px 54px; border: none; border-radius: 999px;
-  background: #FFCA28; color: #5D4037; cursor: pointer;
-  box-shadow: 0 8px 0 #F57F17; animation: bob 1.6s ease-in-out infinite;
+#decks { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
+#decks button {
+  font-family: inherit; font-weight: 700; font-size: 28px;
+  padding: 16px 30px; border: none; border-radius: 999px; color: #fff; cursor: pointer;
+  background: var(--c); box-shadow: 0 7px 0 rgba(0,0,0,.22);
 }
-#playBtn:active { transform: translateY(6px); box-shadow: 0 2px 0 #F57F17; }
-.hint { font-size: 22px; color: #fff; }
+#decks button small { display: block; font-size: 16px; opacity: .9; }
+#decks button:active { transform: translateY(5px); box-shadow: 0 2px 0 rgba(0,0,0,.22); }
+.hint { font-size: 20px; color: #fff; text-align: center; text-shadow: 0 2px 0 rgba(0,0,0,.12); }
 .hidden { display: none !important; }
 
-@keyframes bob { 50% { transform: translateY(-8px); } }
+@keyframes boing { 30% { transform: scale(1.18); } 60% { transform: scale(.95); } }
+@keyframes flyOut { to { transform: translateX(-120vw) rotate(-14deg); } }
+@keyframes flyIn  { from { transform: translateX(110vw) rotate(10deg); } }
+@keyframes nudge  { 50% { transform: translate(5px, -50%); } }
+@keyframes nudgeL { 50% { transform: translate(-5px, -50%) scaleX(-1); } }

@@ -1,21 +1,25 @@
-# Bubble Pop Pals
+# Sight Word Cards
 
-A simple bubble-popping game for little kids, built as a Progressive Web App (PWA).
+Flash cards for practicing sight words, built as a Progressive Web App (PWA).
 
-- Tap bubbles to pop them. Each pop says the color out loud.
-- Every 10 pops there's a celebration.
-- There's no way to lose.
+- A word shows on the card. Your kid tries to read it out loud.
+- Tap the word (the white part of the card) to hear it read.
+- Tap the colored edge of the card for a new card.
+- A small celebration every 10 cards, and a bigger one after the whole deck.
 - Works offline once it's loaded, and can be installed to a phone or tablet home screen.
 
 **Play it:** https://thomaspmahan.github.io/Bubble-pop/
+
+(This repo started as Bubble Pop Pals. That version is still in the commit history.)
 
 ## Files
 
 | File | What it does |
 |---|---|
 | `index.html` | The page itself |
-| `style.css` | Colors, fonts and layout |
-| `game.js` | All the game logic: bubbles, popping, sounds, voice |
+| `style.css` | Colors, fonts, card layout and animations |
+| `game.js` | The word lists and all the game logic |
+| `andika-bold.woff2` | Andika, a font made for beginning readers (SIL Open Font License, see `andika-LICENSE.txt`) |
 | `manifest.json` | Tells phones the app's name and icon so it can be installed |
 | `sw.js` | Service worker: saves the files so the game works offline |
 | `icon-*.png` | App icons |
@@ -23,11 +27,12 @@ A simple bubble-popping game for little kids, built as a Progressive Web App (PW
 ## Making changes
 
 1. Edit a file (on github.com, open the file and click the pencil icon).
-2. In `sw.js`, bump `bubble-pop-v1` to `bubble-pop-v2` (and so on), or devices will keep showing the old version.
+2. In `sw.js`, bump `sight-words-v1` to `sight-words-v2` (and so on), or devices will keep showing the old version.
 3. Commit. GitHub Pages updates the live site in a minute or two.
 
 Easy first tweaks in `game.js`:
-- `PALS`: the animal emoji inside the bubbles
-- `COLORS`: the bubble colors and their names
-- `speed: rand(45, 90)`: how fast bubbles float
-- `score % 10`: how often the celebration happens
+- `MY_WORDS`: put the words from his teacher's list here, and a **My Words** button appears on the start screen
+- `STARTER` / `NEXT_UP`: the Dolch Pre-Primer and Primer sight-word lists
+- `EDGE_COLORS`: the card edge colors
+- `rate = 0.8` in `say()`: how fast the word is read (1 is normal speed)
+- `count % 10`: how often the celebration happens

@@ -3,34 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <title>Bubble Pop Pals</title>
-  <meta name="description" content="A simple bubble-popping game for little kids. Tap the bubbles!">
+  <title>Sight Word Cards</title>
+  <meta name="description" content="Flash cards for practicing sight words. Read the word, tap it to hear it, tap the edge for a new card.">
   <meta name="theme-color" content="#4FC3F7">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Bubble Pop">
+  <meta name="apple-mobile-web-app-title" content="Sight Words">
+  <link rel="preload" href="andika-bold.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <canvas id="game"></canvas>
-
   <div id="hud">
-    <div id="score">⭐ 0</div>
+    <div id="count">⭐ 0</div>
     <div id="buttons">
-      <button id="voiceBtn" aria-label="Toggle voice">🗣️</button>
-      <button id="soundBtn" aria-label="Toggle sound">🔊</button>
+      <button id="homeBtn" aria-label="Pick word list">🏠</button>
+      <button id="soundBtn" aria-label="Toggle sound effects">🔊</button>
     </div>
   </div>
+
+  <main id="table">
+    <!-- The colored border is the "edge": tap it for a new card.
+         The white middle with the word: tap it to hear the word. -->
+    <div id="card" role="button" aria-label="Flash card">
+      <span class="arrow left">❯</span>
+      <span class="arrow right">❯</span>
+      <div id="face">
+        <span id="word"></span>
+      </div>
+    </div>
+  </main>
 
   <div id="callout"></div>
 
   <div id="start">
-    <h1>Bubble<br>Pop Pals</h1>
-    <button id="playBtn">▶ Play</button>
-    <p class="hint">Tap the bubbles!</p>
+    <h1>Sight<br>Words</h1>
+    <div id="decks"></div>
+    <p class="hint">Say the word. Tap it to hear it.<br>Tap the edge for a new card.</p>
   </div>
 
   <script src="game.js"></script>

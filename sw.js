@@ -1,7 +1,7 @@
 // Service worker: saves the game's files on the device so it works offline.
 // When you change any game file, bump the version number below so devices
 // pick up the new version.
-const CACHE = 'bubble-pop-v1';
+const CACHE = 'sight-words-v1';
 const FILES = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const FILES = [
   './icon-192.png',
   './icon-512.png',
   './icon-maskable-512.png',
+  './andika-bold.woff2',
 ];
 
 self.addEventListener('install', e => {

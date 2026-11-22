@@ -1,14 +1,43 @@
-// Bubble Pop Pals — a simple tap game for little kids.
-// No way to lose: bubbles float up, tap them to pop. Every pop says the color,
-// and every 10 pops there's a celebration.
+// Sight Word Cards — flash cards for early readers.
+// 1. A word shows on the card. Your kid tries to read it out loud.
+// 2. Tap the word (the white part of the card) to hear it read.
+// 3. Tap the colored edge of the card for a new card.
 
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
-const scoreEl = document.getElementById('score');
+// ---------- Word lists (edit these!) ----------
+// Dolch sight words, the lists most US schools use for Pre-K and Kindergarten.
+const STARTER = ['a', 'and', 'away', 'big', 'blue', 'can', 'come', 'down', 'find', 'for',
+  'funny', 'go', 'help', 'here', 'I', 'in', 'is', 'it', 'jump', 'little', 'look', 'make',
+  'me', 'my', 'not', 'one', 'play', 'red', 'run', 'said', 'see', 'the', 'three', 'to', 'two',
+  'up', 'we', 'where', 'yellow', 'you'];
+const NEXT_UP = ['all', 'am', 'are', 'at', 'ate', 'be', 'black', 'brown', 'but', 'came', 'did',
+  'do', 'eat', 'four', 'get', 'good', 'have', 'he', 'into', 'like', 'must', 'new', 'no', 'now',
+  'on', 'our', 'out', 'please', 'pretty', 'ran', 'ride', 'saw', 'say', 'she', 'so', 'soon',
+  'that', 'there', 'they', 'this', 'too', 'under', 'want', 'was', 'well', 'went', 'what',
+  'white', 'who', 'will', 'with', 'yes'];
+// Put the words from his teacher's list here, e.g. ['the', 'mom', 'dad'].
+// A "My Words" button shows up on the start screen once this list has words in it.
+const MY_WORDS = [];
+
+const DECKS = [
+  { name: 'Starter',   note: STARTER.length + ' words', words: STARTER, color: '#66BB6A' },
+  { name: 'Next Up',   note: NEXT_UP.length + ' words', words: NEXT_UP, color: '#42A5F5' },
+  { name: 'All Words', note: (STARTER.length + NEXT_UP.length) + ' words', words: [...STARTER, ...NEXT_UP], color: '#AB47BC' },
+  { name: 'My Words',  note: MY_WORDS.length + ' words', words: MY_WORDS, color: '#FF7043' },
+].filter(d => d.words.length > 0);
+
+// Colors for the card edge. It changes with every new card.
+const EDGE_COLORS = ['#FF7043', '#42A5F5', '#66BB6A', '#AB47BC', '#FFA726', '#EC407A', '#26A69A'];
+
+// ---------- Page elements ----------
+const cardEl = document.getElementById('card');
+const faceEl = document.getElementById('face');
+const wordEl = document.getElementById('word');
+const countEl = document.getElementById('count');
 const calloutEl = document.getElementById('callout');
 const startEl = document.getElementById('start');
+const decksEl = document.getElementById('decks');
 const soundBtn = document.getElementById('soundBtn');
-const voiceBtn = document.getElementById('voiceBtn');
+const homeBtn = document.getElementById('homeBtn');
 
 // ---------- Settings (remembered between visits when possible) ----------
 function load(key, fallback) {
@@ -18,56 +47,57 @@ function load(key, fallback) {
 function save(key, value) { try { localStorage.setItem(key, value); } catch {} }
 
 let soundOn = load('soundOn', true);
-let voiceOn = load('voiceOn', true);
 function refreshButtons() {
   soundBtn.classList.toggle('off', !soundOn);
-  voiceBtn.classList.toggle('off', !voiceOn);
   soundBtn.textContent = soundOn ? '🔊' : '🔇';
 }
 refreshButtons();
 
-// ---------- Game data ----------
-const COLORS = [
-  { name: 'Red',    fill: '#EF5350', note: 523 },
-  { name: 'Orange', fill: '#FFA726', note: 587 },
-  { name: 'Yellow', fill: '#FFEE58', note: 659 },
-  { name: 'Green',  fill: '#66BB6A', note: 698 },
-  { name: 'Blue',   fill: '#42A5F5', note: 784 },
-  { name: 'Purple', fill: '#AB47BC', note: 880 },
-  { name: 'Pink',   fill: '#F06292', note: 988 },
-];
-const PALS = ['🐶', '🐱', '🐸', '🐵', '🐷', '🐰', '🦁', '🐻', '🐼', '🐥', '🐢', '🐙'];
+// ---------- Deck ----------
+let deck = [];        // words left in this round, shuffled
+let words = [];       // the full word list being practiced
+let current = '';
+let count = 0;        // cards seen
+let edgeIndex = 0;
+let busy = false;     // true while a card is flying, so double taps don't skip cards
 
-let W = 0, H = 0, DPR = 1;
-let bubbles = [];
-let particles = [];
-let score = 0;
-let running = false;
-let spawnTimer = 0;
-let lastTime = 0;
-
-function resize() {
-  DPR = Math.min(window.devicePixelRatio || 1, 2);
-  W = window.innerWidth; H = window.innerHeight;
-  canvas.width = W * DPR; canvas.height = H * DPR;
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+function shuffle(list) {
+  const a = [...list];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
-window.addEventListener('resize', resize);
-resize();
 
-function rand(a, b) { return a + Math.random() * (b - a); }
+function nextWord() {
+  if (deck.length === 0) {
+    deck = shuffle(words);
+    // Don't show the same word twice in a row when the deck restarts.
+    if (deck.length > 1 && deck[deck.length - 1] === current) deck.unshift(deck.pop());
+  }
+  return deck.pop();
+}
 
-function spawnBubble() {
-  const r = rand(38, 62) * Math.min(1.3, Math.max(0.8, W / 500));
-  bubbles.push({
-    x: rand(r, W - r),
-    y: H + r,
-    r,
-    speed: rand(45, 90),           // pixels per second — slow for little fingers
-    wobble: rand(0, Math.PI * 2),
-    color: COLORS[Math.floor(Math.random() * COLORS.length)],
-    pal: Math.random() < 0.6 ? PALS[Math.floor(Math.random() * PALS.length)] : null,
-  });
+// Make the word as big as possible while still fitting on the card.
+function fitWord() {
+  const w = faceEl.clientWidth, h = faceEl.clientHeight;
+  if (!w || !h) return;
+  let size = h * 0.62;
+  wordEl.style.fontSize = size + 'px';
+  const maxW = w * 0.88;
+  if (wordEl.scrollWidth > maxW) size *= maxW / wordEl.scrollWidth;
+  wordEl.style.fontSize = size + 'px';
+}
+window.addEventListener('resize', fitWord);
+if (document.fonts) document.fonts.ready.then(fitWord);
+
+function showWord(word) {
+  current = word;
+  wordEl.textContent = word;
+  wordEl.classList.remove('heard');
+  cardEl.style.setProperty('--edge', EDGE_COLORS[edgeIndex % EDGE_COLORS.length]);
+  fitWord();
 }
 
 // ---------- Sound (made in code, no audio files needed) ----------
@@ -78,29 +108,48 @@ function ensureAudio() {
   }
   if (audio && audio.state === 'suspended') audio.resume();
 }
-function popSound(freq) {
+function tone(freq, endFreq, len, vol = 0.25, type = 'sine') {
   if (!soundOn || !audio) return;
   const t = audio.currentTime;
   const osc = audio.createOscillator();
   const gain = audio.createGain();
-  osc.type = 'sine';
+  osc.type = type;
   osc.frequency.setValueAtTime(freq, t);
-  osc.frequency.exponentialRampToValueAtTime(freq * 2, t + 0.08);
-  gain.gain.setValueAtTime(0.35, t);
-  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+  osc.frequency.exponentialRampToValueAtTime(endFreq, t + len);
+  gain.gain.setValueAtTime(vol, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + len);
   osc.connect(gain).connect(audio.destination);
-  osc.start(t); osc.stop(t + 0.26);
+  osc.start(t); osc.stop(t + len + 0.02);
 }
+function whoosh() { tone(300, 900, 0.18, 0.15, 'triangle'); }
 function cheerSound() {
-  if (!soundOn || !audio) return;
-  [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => popSound(f), i * 110));
+  [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, f * 2, 0.25, 0.3), i * 110));
 }
 
-function say(text) {
-  if (!voiceOn || !('speechSynthesis' in window)) return;
+// ---------- Voice ----------
+// The voice always reads the word — that's the point of the game.
+// Only the beeps and whooshes are turned off by the sound button.
+let voice = null;
+function pickVoice() {
+  if (!('speechSynthesis' in window)) return;
+  const voices = speechSynthesis.getVoices();
+  voice = voices.find(v => v.lang === 'en-US' && v.localService) ||
+          voices.find(v => v.lang === 'en-US') ||
+          voices.find(v => v.lang && v.lang.startsWith('en')) || null;
+}
+if ('speechSynthesis' in window) {
+  pickVoice();
+  speechSynthesis.addEventListener?.('voiceschanged', pickVoice);
+}
+
+function say(text, rate = 0.8) {
+  if (!('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  u.rate = 0.95; u.pitch = 1.3;
+  if (voice) u.voice = voice;
+  u.lang = 'en-US';
+  u.rate = rate;      // a little slow so it's easy to hear
+  u.pitch = 1.1;
   speechSynthesis.speak(u);
 }
 
@@ -109,159 +158,76 @@ function callout(text) {
   calloutEl.textContent = text;
   calloutEl.classList.add('show');
   clearTimeout(calloutTimer);
-  calloutTimer = setTimeout(() => calloutEl.classList.remove('show'), 900);
+  calloutTimer = setTimeout(() => calloutEl.classList.remove('show'), 1100);
 }
 
-// ---------- Popping ----------
-function burst(x, y, color, count = 14) {
-  for (let i = 0; i < count; i++) {
-    const a = rand(0, Math.PI * 2), s = rand(120, 320);
-    particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s,
-      life: 1, size: rand(5, 11), color, star: false });
-  }
-}
-function starShower() {
-  for (let i = 0; i < 40; i++) {
-    particles.push({ x: rand(0, W), y: rand(-60, 0), vx: rand(-40, 40), vy: rand(150, 350),
-      life: 1.8, size: rand(18, 30), color: '#FFD54F', star: true });
-  }
+// ---------- Taps ----------
+function hearWord() {
+  wordEl.classList.remove('heard');
+  void wordEl.offsetWidth;            // restart the bounce animation
+  wordEl.classList.add('heard');
+  say(current);
 }
 
-function handleTap(px, py) {
-  if (!running) return;
-  ensureAudio();
-  // Check from the top-most (last drawn) bubble down. Hit area is a bit
-  // bigger than the bubble so small fingers succeed.
-  for (let i = bubbles.length - 1; i >= 0; i--) {
-    const b = bubbles[i];
-    const dx = px - b.x, dy = py - b.y;
-    if (dx * dx + dy * dy <= (b.r * 1.2) ** 2) {
-      bubbles.splice(i, 1);
-      score++;
-      scoreEl.textContent = '⭐ ' + score;
-      burst(b.x, b.y, b.color.fill);
-      popSound(b.color.note);
-      if (score % 10 === 0) {
-        callout('🎉 ' + score + '!');
-        say(score + '! Great job!');
-        cheerSound();
-        starShower();
-      } else {
-        callout(b.color.name);
-        say(b.color.name);
-      }
-      return;
+function newCard() {
+  if (busy) return;
+  busy = true;
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  whoosh();
+  cardEl.classList.add('out');
+  setTimeout(() => {
+    edgeIndex++;
+    count++;
+    countEl.textContent = '⭐ ' + count;
+    const finishedRound = deck.length === 0;
+    showWord(nextWord());
+    cardEl.classList.remove('out');
+    cardEl.classList.add('in');
+    setTimeout(() => { cardEl.classList.remove('in'); busy = false; }, 330);
+
+    if (finishedRound) {
+      callout('🎉 All done!');
+      say('You did every card! Great job!', 0.95);
+      cheerSound();
+    } else if (count % 10 === 0) {
+      callout('🎉 ' + count + '!');
+      say(count + ' cards! Great job!', 0.95);
+      cheerSound();
     }
-  }
+  }, 280);
 }
 
-canvas.addEventListener('pointerdown', e => {
-  e.preventDefault();
-  handleTap(e.clientX, e.clientY);
+cardEl.addEventListener('click', e => {
+  ensureAudio();
+  if (faceEl.contains(e.target)) hearWord();   // white middle = hear the word
+  else newCard();                              // colored edge = new card
 });
 
-// ---------- Drawing ----------
-function drawBubble(b) {
-  const x = b.x + Math.sin(b.wobble) * 8;
-  ctx.save();
-  ctx.globalAlpha = 0.9;
-  const g = ctx.createRadialGradient(x - b.r * 0.35, b.y - b.r * 0.35, b.r * 0.1, x, b.y, b.r);
-  g.addColorStop(0, '#ffffff');
-  g.addColorStop(0.25, b.color.fill);
-  g.addColorStop(1, b.color.fill);
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.arc(x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
-  ctx.globalAlpha = 1;
-  ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.stroke();
-  // shine
-  ctx.fillStyle = 'rgba(255,255,255,.7)';
-  ctx.beginPath(); ctx.ellipse(x - b.r * 0.4, b.y - b.r * 0.45, b.r * 0.18, b.r * 0.1, -0.6, 0, Math.PI * 2); ctx.fill();
-  if (b.pal) {
-    ctx.font = `${Math.round(b.r * 0.95)}px serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(b.pal, x, b.y + b.r * 0.05);
-  }
-  ctx.restore();
-}
-
-function drawStar(x, y, r) {
-  ctx.beginPath();
-  for (let i = 0; i < 10; i++) {
-    const rad = i % 2 ? r * 0.45 : r;
-    const a = -Math.PI / 2 + i * Math.PI / 5;
-    ctx.lineTo(x + Math.cos(a) * rad, y + Math.sin(a) * rad);
-  }
-  ctx.closePath(); ctx.fill();
-}
-
-function drawClouds(t) {
-  ctx.fillStyle = 'rgba(255,255,255,.6)';
-  const clouds = [[0.15, 0.18, 1], [0.7, 0.3, 1.3], [0.4, 0.62, 0.9]];
-  clouds.forEach(([cx, cy, s], i) => {
-    const x = ((cx * W + t * (8 + i * 4)) % (W + 240)) - 120;
-    const y = cy * H;
-    ctx.beginPath();
-    ctx.arc(x, y, 30 * s, 0, Math.PI * 2);
-    ctx.arc(x + 32 * s, y - 14 * s, 36 * s, 0, Math.PI * 2);
-    ctx.arc(x + 66 * s, y, 28 * s, 0, Math.PI * 2);
-    ctx.fill();
-  });
-}
-
-// ---------- Main loop ----------
-function loop(now) {
-  const dt = Math.min(0.05, (now - lastTime) / 1000 || 0);
-  lastTime = now;
-  const t = now / 1000;
-
-  ctx.clearRect(0, 0, W, H);
-  drawClouds(t);
-
-  if (running) {
-    spawnTimer -= dt;
-    if (spawnTimer <= 0 && bubbles.length < 12) {
-      spawnBubble();
-      spawnTimer = rand(0.5, 1.1);
-    }
-  }
-
-  for (let i = bubbles.length - 1; i >= 0; i--) {
-    const b = bubbles[i];
-    b.y -= b.speed * dt;
-    b.wobble += dt * 2;
-    if (b.y < -b.r * 1.5) bubbles.splice(i, 1); // floated away — no penalty
-    else drawBubble(b);
-  }
-
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx * dt; p.y += p.vy * dt;
-    if (!p.star) p.vy += 400 * dt;
-    p.life -= dt * (p.star ? 0.6 : 1.6);
-    if (p.life <= 0 || p.y > H + 50) { particles.splice(i, 1); continue; }
-    ctx.globalAlpha = Math.min(1, p.life);
-    ctx.fillStyle = p.color;
-    if (p.star) drawStar(p.x, p.y, p.size);
-    else { ctx.beginPath(); ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2); ctx.fill(); }
-    ctx.globalAlpha = 1;
-  }
-
-  requestAnimationFrame(loop);
-}
-requestAnimationFrame(loop);
-
-// ---------- Buttons ----------
-document.getElementById('playBtn').addEventListener('click', () => {
+// ---------- Start screen ----------
+function startDeck(d) {
   ensureAudio();
+  words = d.words;
+  deck = shuffle(words);
+  count = 0;
+  countEl.textContent = '⭐ 0';
   startEl.classList.add('hidden');
-  running = true;
-  for (let i = 0; i < 3; i++) setTimeout(spawnBubble, i * 300);
-  say('Pop the bubbles!');
+  showWord(nextWord());
+  cardEl.classList.add('in');
+  setTimeout(() => cardEl.classList.remove('in'), 330);
+}
+
+DECKS.forEach(d => {
+  const b = document.createElement('button');
+  b.style.setProperty('--c', d.color);
+  b.innerHTML = `${d.name}<small>${d.note}</small>`;
+  b.addEventListener('click', () => startDeck(d));
+  decksEl.appendChild(b);
+});
+
+homeBtn.addEventListener('click', () => {
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  startEl.classList.remove('hidden');
 });
 soundBtn.addEventListener('click', () => {
   soundOn = !soundOn; save('soundOn', soundOn); refreshButtons();
-});
-voiceBtn.addEventListener('click', () => {
-  voiceOn = !voiceOn; save('voiceOn', voiceOn); refreshButtons();
-  if (!voiceOn && 'speechSynthesis' in window) speechSynthesis.cancel();
 });
