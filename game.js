@@ -1,4 +1,4 @@
-// Sight Word Cards — flash cards for early readers.
+// Fun Cards — flash cards for early readers.
 // 1. A word shows on the card. Your kid tries to read it out loud.
 // 2. Tap the word (the white part of the card) to hear it read.
 // 3. Tap the right edge of the card to go forward, the left edge to go back.

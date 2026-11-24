@@ -1,4 +1,4 @@
-# Sight Word Cards
+# Fun Cards
 
 Flash cards for practicing sight words, built as a Progressive Web App (PWA).
 
@@ -28,7 +28,7 @@ Flash cards for practicing sight words, built as a Progressive Web App (PWA).
 ## Making changes
 
 1. Edit a file (on github.com, open the file and click the pencil icon).
-2. In `sw.js`, bump the number in `sight-words-v2` (to v3, v4 and so on), or devices will keep showing the old version.
+2. In `sw.js`, bump the number in `fun-cards-v3` (to v4, v5 and so on), or devices will keep showing the old version.
 3. Commit. GitHub Pages updates the live site in a minute or two.
 
 Easy first tweaks in `game.js`:

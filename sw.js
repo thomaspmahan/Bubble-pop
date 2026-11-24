@@ -1,7 +1,7 @@
 // Service worker: saves the game's files on the device so it works offline.
 // When you change any game file, bump the version number below so devices
 // pick up the new version.
-const CACHE = 'sight-words-v2';
+const CACHE = 'fun-cards-v3';
 const FILES = [
   './',
   './index.html',

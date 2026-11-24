@@ -1,6 +1,6 @@
 {
-  "name": "Sight Word Cards",
-  "short_name": "Sight Words",
+  "name": "Fun Cards",
+  "short_name": "Fun Cards",
   "description": "Flash cards for practicing sight words.",
   "start_url": "./",
   "scope": "./",
