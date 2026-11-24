@@ -9,9 +9,9 @@ Flash cards for practicing sight words, built as a Progressive Web App (PWA).
 - The 🗣️ button on the start screen switches between the device's voices.
 - Works offline once it's loaded, and can be installed to a phone or tablet home screen.
 
-**Play it:** https://thomaspmahan.github.io/Bubble-pop/
+**Play it:** https://thomaspmahan.github.io/fun-cards/
 
-(This repo started as Bubble Pop Pals. That version is still in the commit history.)
+(This repo started as Bubble Pop Pals, under the name Bubble-pop. That version is still in the commit history.)
 
 ## Files
 
